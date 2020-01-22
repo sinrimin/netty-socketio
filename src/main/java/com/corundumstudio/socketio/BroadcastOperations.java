@@ -25,6 +25,7 @@ import java.util.Set;
 
 import com.corundumstudio.socketio.misc.IterableCollection;
 import com.corundumstudio.socketio.namespace.Namespace;
+import com.corundumstudio.socketio.protocol.BroadcastPacket;
 import com.corundumstudio.socketio.protocol.Packet;
 import com.corundumstudio.socketio.protocol.PacketType;
 import com.corundumstudio.socketio.store.StoreFactory;
@@ -72,15 +73,17 @@ public class BroadcastOperations implements ClientOperations {
 
     @Override
     public void send(Packet packet) {
+        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet);
         for (SocketIOClient client : clients) {
-            client.send(packet);
+            client.send(broadcastPacket);
         }
         dispatch(packet);
     }
 
     public <T> void send(Packet packet, BroadcastAckCallback<T> ackCallback) {
+        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet);
         for (SocketIOClient client : clients) {
-            client.send(packet, ackCallback.createClientCallback(client));
+            client.send(broadcastPacket, ackCallback.createClientCallback(client));
         }
         ackCallback.loopFinished();
     }
@@ -93,7 +96,7 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public void sendEvent(String name, SocketIOClient excludedClient, Object... data) {
-        Packet packet = new Packet(PacketType.MESSAGE);
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
         packet.setSubType(PacketType.EVENT);
         packet.setName(name);
         packet.setData(Arrays.asList(data));
@@ -106,10 +109,10 @@ public class BroadcastOperations implements ClientOperations {
         }
         dispatch(packet);
     }
-    
+
     @Override
     public void sendEvent(String name, Object... data) {
-        Packet packet = new Packet(PacketType.MESSAGE);
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
         packet.setSubType(PacketType.EVENT);
         packet.setName(name);
         packet.setData(Arrays.asList(data));
@@ -117,18 +120,26 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public <T> void sendEvent(String name, Object data, BroadcastAckCallback<T> ackCallback) {
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
+        packet.setSubType(PacketType.EVENT);
+        packet.setName(name);
+        packet.setData(Arrays.asList(data));
         for (SocketIOClient client : clients) {
-            client.sendEvent(name, ackCallback.createClientCallback(client), data);
+            client.send(packet, ackCallback.createClientCallback(client));
         }
         ackCallback.loopFinished();
     }
-    
+
     public <T> void sendEvent(String name, Object data, SocketIOClient excludedClient, BroadcastAckCallback<T> ackCallback) {
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
+        packet.setSubType(PacketType.EVENT);
+        packet.setName(name);
+        packet.setData(Arrays.asList(data));
         for (SocketIOClient client : clients) {
             if (client.getSessionId().equals(excludedClient.getSessionId())) {
                 continue;
             }
-            client.sendEvent(name, ackCallback.createClientCallback(client), data);
+            client.send(packet, ackCallback.createClientCallback(client));
         }
         ackCallback.loopFinished();
     }

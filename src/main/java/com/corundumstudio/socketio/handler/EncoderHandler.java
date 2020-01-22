@@ -38,6 +38,7 @@ import com.corundumstudio.socketio.messages.HttpMessage;
 import com.corundumstudio.socketio.messages.OutPacketMessage;
 import com.corundumstudio.socketio.messages.XHROptionsMessage;
 import com.corundumstudio.socketio.messages.XHRPostMessage;
+import com.corundumstudio.socketio.protocol.BroadcastPacket;
 import com.corundumstudio.socketio.protocol.Packet;
 import com.corundumstudio.socketio.protocol.PacketEncoder;
 
@@ -238,8 +239,20 @@ public class EncoderHandler extends ChannelOutboundHandlerAdapter {
                 break;
             }
 
-            final ByteBuf out = encoder.allocateBuffer(ctx.alloc());
-            encoder.encodePacket(packet, out, ctx.alloc(), true);
+            final ByteBuf out;
+            if (packet instanceof BroadcastPacket) {
+                out = ((BroadcastPacket) packet).getByteBuf(new BroadcastPacket.BroadcastPacketEncoder() {
+                    @Override
+                    public ByteBuf encode(BroadcastPacket broadcastPacket, ChannelHandlerContext context) throws IOException {
+                        ByteBuf byteBuf = encoder.allocateBuffer(context.alloc());
+                        encoder.encodePacket(broadcastPacket, byteBuf, context.alloc(), true);
+                        return byteBuf;
+                    }
+                }, ctx);
+            } else {
+                out = encoder.allocateBuffer(ctx.alloc());
+                encoder.encodePacket(packet, out, ctx.alloc(), true);
+            }
 
             WebSocketFrame res = new TextWebSocketFrame(out);
             if (log.isTraceEnabled()) {
