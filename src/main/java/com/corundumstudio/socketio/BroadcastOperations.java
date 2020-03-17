@@ -52,7 +52,7 @@ public class BroadcastOperations implements ClientOperations {
         for (SocketIOClient socketIOClient : clients) {
             Namespace namespace = (Namespace)socketIOClient.getNamespace();
             Set<String> rooms = namespace.getRooms(socketIOClient);
-            
+
             Set<String> roomsList = namespaceRooms.get(namespace.getName());
             if (roomsList == null) {
                 roomsList = new HashSet<String>();
@@ -73,7 +73,7 @@ public class BroadcastOperations implements ClientOperations {
 
     @Override
     public void send(Packet packet) {
-        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet);
+        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet, clients);
         for (SocketIOClient client : clients) {
             client.send(broadcastPacket);
         }
@@ -81,7 +81,7 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public <T> void send(Packet packet, BroadcastAckCallback<T> ackCallback) {
-        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet);
+        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet, clients);
         for (SocketIOClient client : clients) {
             client.send(broadcastPacket, ackCallback.createClientCallback(client));
         }
@@ -96,7 +96,7 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public void sendEvent(String name, SocketIOClient excludedClient, Object... data) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
         packet.setSubType(PacketType.EVENT);
         packet.setName(name);
         packet.setData(Arrays.asList(data));
@@ -112,7 +112,7 @@ public class BroadcastOperations implements ClientOperations {
 
     @Override
     public void sendEvent(String name, Object... data) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
         packet.setSubType(PacketType.EVENT);
         packet.setName(name);
         packet.setData(Arrays.asList(data));
@@ -120,7 +120,7 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public <T> void sendEvent(String name, Object data, BroadcastAckCallback<T> ackCallback) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
         packet.setSubType(PacketType.EVENT);
         packet.setName(name);
         packet.setData(Arrays.asList(data));
@@ -131,7 +131,7 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public <T> void sendEvent(String name, Object data, SocketIOClient excludedClient, BroadcastAckCallback<T> ackCallback) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE);
+        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
         packet.setSubType(PacketType.EVENT);
         packet.setName(name);
         packet.setData(Arrays.asList(data));
