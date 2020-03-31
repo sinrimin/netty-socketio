@@ -15,7 +15,6 @@
  */
 package com.corundumstudio.socketio;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,9 +24,7 @@ import java.util.Set;
 
 import com.corundumstudio.socketio.misc.IterableCollection;
 import com.corundumstudio.socketio.namespace.Namespace;
-import com.corundumstudio.socketio.protocol.BroadcastPacket;
 import com.corundumstudio.socketio.protocol.Packet;
-import com.corundumstudio.socketio.protocol.PacketType;
 import com.corundumstudio.socketio.store.StoreFactory;
 import com.corundumstudio.socketio.store.pubsub.DispatchMessage;
 import com.corundumstudio.socketio.store.pubsub.PubSubType;
@@ -73,18 +70,12 @@ public class BroadcastOperations implements ClientOperations {
 
     @Override
     public void send(Packet packet) {
-        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet, clients);
-        for (SocketIOClient client : clients) {
-            client.send(broadcastPacket);
-        }
+        BroadcastUtils.send(clients, packet);
         dispatch(packet);
     }
 
     public <T> void send(Packet packet, BroadcastAckCallback<T> ackCallback) {
-        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet, clients);
-        for (SocketIOClient client : clients) {
-            client.send(broadcastPacket, ackCallback.createClientCallback(client));
-        }
+        BroadcastUtils.send(clients, packet);
         ackCallback.loopFinished();
     }
 
@@ -96,53 +87,20 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public void sendEvent(String name, SocketIOClient excludedClient, Object... data) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
-        packet.setSubType(PacketType.EVENT);
-        packet.setName(name);
-        packet.setData(Arrays.asList(data));
-
-        for (SocketIOClient client : clients) {
-            if (client.getSessionId().equals(excludedClient.getSessionId())) {
-                continue;
-            }
-            client.send(packet);
-        }
+        Packet packet = BroadcastUtils.sendEvent(clients, name, excludedClient, data);
         dispatch(packet);
     }
 
     @Override
     public void sendEvent(String name, Object... data) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
-        packet.setSubType(PacketType.EVENT);
-        packet.setName(name);
-        packet.setData(Arrays.asList(data));
-        send(packet);
+        Packet packet = BroadcastUtils.sendEvent(clients, name, null, data);
     }
 
     public <T> void sendEvent(String name, Object data, BroadcastAckCallback<T> ackCallback) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
-        packet.setSubType(PacketType.EVENT);
-        packet.setName(name);
-        packet.setData(Arrays.asList(data));
-        for (SocketIOClient client : clients) {
-            client.send(packet, ackCallback.createClientCallback(client));
-        }
-        ackCallback.loopFinished();
+        BroadcastUtils.sendEvent(clients, name, data, null, null);
     }
 
     public <T> void sendEvent(String name, Object data, SocketIOClient excludedClient, BroadcastAckCallback<T> ackCallback) {
-        BroadcastPacket packet = new BroadcastPacket(PacketType.MESSAGE, clients);
-        packet.setSubType(PacketType.EVENT);
-        packet.setName(name);
-        packet.setData(Arrays.asList(data));
-        for (SocketIOClient client : clients) {
-            if (client.getSessionId().equals(excludedClient.getSessionId())) {
-                continue;
-            }
-            client.send(packet, ackCallback.createClientCallback(client));
-        }
-        ackCallback.loopFinished();
+        BroadcastUtils.sendEvent(clients, name, data, null, ackCallback);
     }
-
-
 }

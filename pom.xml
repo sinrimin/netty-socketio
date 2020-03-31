@@ -2,20 +2,13 @@
  <modelVersion>4.0.0</modelVersion>
 
  <groupId>com.corundumstudio.socketio</groupId>
- <artifactId>netty-socketio</artifactId>
+ <artifactId>netty-socketio-plus</artifactId>
  <version>1.7.18</version>
  <packaging>bundle</packaging>
  <name>NettySocketIO</name>
  <description>Socket.IO server implemented on Java</description>
  <inceptionYear>2012</inceptionYear>
  <url>https://github.com/mrniko/netty-socketio</url>
-
- <scm>
-    <url>scm:git:git@github.com:mrniko/netty-socketio.git</url>
-    <connection>scm:git:git@github.com:mrniko/netty-socketio.git</connection>
-    <developerConnection>scm:git:git@github.com:mrniko/netty-socketio.git</developerConnection>
-   <tag>netty-socketio-1.7.18</tag>
-  </scm>
 
  <licenses>
      <license>
@@ -24,27 +17,6 @@
          <distribution>manual</distribution>
      </license>
  </licenses>
-
- <developers>
-     <developer>
-         <id>mrniko</id>
-         <name>Nikita Koksharov</name>
-         <email>abracham.mitchell@gmail.com</email>
-         <roles>
-             <role>Architect</role>
-             <role>Developer</role>
-         </roles>
-         <timezone>+4</timezone>
-     </developer>
- </developers>
-
- <distributionManagement>
-     <repository>
-         <id>repo1</id>
-         <name>Release</name>
-         <url>file://C:/123</url>
-     </repository>
- </distributionManagement>
 
  <properties>
      <skipTests>true</skipTests>
@@ -181,6 +153,27 @@
         <version>3.4.3</version>
         <scope>provided</scope>
     </dependency>
+
+     <!-- JMH-->
+     <dependency>
+         <groupId>org.openjdk.jmh</groupId>
+         <artifactId>jmh-core</artifactId>
+         <version>1.21</version>
+         <scope>test</scope>
+     </dependency>
+     <dependency>
+         <groupId>org.openjdk.jmh</groupId>
+         <artifactId>jmh-generator-annprocess</artifactId>
+         <version>1.21</version>
+         <scope>test</scope>
+     </dependency>
+     <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-simple</artifactId>
+         <version>1.7.21</version>
+         <scope>test</scope>
+     </dependency>
+
  </dependencies>
 
 

@@ -15,6 +15,12 @@
  */
 package com.corundumstudio.socketio;
 
+import com.corundumstudio.socketio.protocol.BroadcastPacket;
+import com.corundumstudio.socketio.protocol.Packet;
+import com.corundumstudio.socketio.protocol.PacketType;
+
+import java.util.Arrays;
+
 public interface AuthorizationListener {
 
     /**
