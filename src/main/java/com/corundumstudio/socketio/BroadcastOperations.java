@@ -75,8 +75,7 @@ public class BroadcastOperations implements ClientOperations {
     }
 
     public <T> void send(Packet packet, BroadcastAckCallback<T> ackCallback) {
-        BroadcastUtils.send(clients, packet);
-        ackCallback.loopFinished();
+        BroadcastUtils.send(clients, packet, ackCallback);
     }
 
     @Override
@@ -93,14 +92,14 @@ public class BroadcastOperations implements ClientOperations {
 
     @Override
     public void sendEvent(String name, Object... data) {
-        Packet packet = BroadcastUtils.sendEvent(clients, name, null, data);
+        BroadcastUtils.sendEvent(clients, name, null, data);
     }
 
     public <T> void sendEvent(String name, Object data, BroadcastAckCallback<T> ackCallback) {
-        BroadcastUtils.sendEvent(clients, name, data, null, null);
+        BroadcastUtils.sendEvent(clients, name, data, null, ackCallback);
     }
 
     public <T> void sendEvent(String name, Object data, SocketIOClient excludedClient, BroadcastAckCallback<T> ackCallback) {
-        BroadcastUtils.sendEvent(clients, name, data, null, ackCallback);
+        BroadcastUtils.sendEvent(clients, name, data, excludedClient, ackCallback);
     }
 }

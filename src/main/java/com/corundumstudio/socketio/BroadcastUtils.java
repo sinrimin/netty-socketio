@@ -34,7 +34,19 @@ public class BroadcastUtils {
             client.send(broadcastPacket);
         }
 
-        release(broadcastPacket.getByteBuf());
+        ByteBuf buf = broadcastPacket.release();
+        detector(buf);
+    }
+
+    public static <T> void send(Iterable<SocketIOClient> clients, Packet packet, BroadcastAckCallback<T> ackCallback) {
+        BroadcastPacket broadcastPacket = BroadcastPacket.from(packet);
+        for (SocketIOClient client : clients) {
+            client.send(broadcastPacket, ackCallback.createClientCallback(client));
+        }
+        ackCallback.loopFinished();
+
+        ByteBuf buf = broadcastPacket.release();
+        detector(buf);
     }
 
     public static Packet sendEvent(Iterable<SocketIOClient> clients, String name, SocketIOClient excludedClient, Object... data) {
@@ -50,7 +62,8 @@ public class BroadcastUtils {
             client.send(packet);
         }
 
-        release(packet.getByteBuf());
+        ByteBuf buf = packet.release();
+        detector(buf);
         return packet;
     }
 
@@ -67,17 +80,14 @@ public class BroadcastUtils {
         }
         ackCallback.loopFinished();
 
-        release(packet.getByteBuf());
+        ByteBuf buf = packet.release();
+        detector(buf);
     }
 
-    private static void release(ByteBuf ref) {
-        if (ref != null) {
-            synchronized (ref) {
-                ref.release();
-            }
-            if (ref.refCnt() > 0) {
-                log.warn("LEAK>>>{}", ref.refCnt());
-            }
+    private static void detector(ByteBuf buf) {
+        if (buf != null && buf.refCnt() > 0) {
+            log.error("Memory leak >>>>>> {}", buf.refCnt());
         }
     }
+
 }

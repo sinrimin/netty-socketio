@@ -17,10 +17,14 @@ package com.corundumstudio.socketio.protocol;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class BroadcastPacket extends Packet {
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
     private ByteBuf byteBuf;
 
     public static BroadcastPacket from(Packet packet) {
@@ -40,14 +44,39 @@ public class BroadcastPacket extends Packet {
 
     public ByteBuf getByteBuf(BroadcastPacketEncoder encoder, ChannelHandlerContext ctx) throws IOException {
         if (byteBuf != null) {
-            return byteBuf.copy();
+            if (byteBuf.refCnt() == 0) {
+                throw new IOException("ByteBuf is release");
+            }
+            lock.readLock().lock();
+            try {
+                return byteBuf.copy();
+            } finally {
+                lock.readLock().unlock();
+            }
         }
-        byteBuf = encoder.encode(this, ctx);
-        return byteBuf.copy();
+        lock.writeLock().lock();
+        try {
+            if (byteBuf != null) {
+                return byteBuf.copy();
+            }
+            byteBuf = encoder.encode(this, ctx);
+            return byteBuf.copy();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
-    public ByteBuf getByteBuf() {
-        return byteBuf;
+    public ByteBuf release() {
+        if (byteBuf != null) {
+            lock.writeLock().lock();
+            try {
+                ReferenceCountUtil.release(byteBuf);
+                return byteBuf;
+            } finally {
+                lock.writeLock().unlock();
+            }
+        }
+        return null;
     }
 
     public interface BroadcastPacketEncoder {
